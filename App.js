@@ -9,25 +9,40 @@ import {
   Platform,
   StyleSheet,
   Text,
-  View
+  View,
+  Image
 } from 'react-native';
 import { Screen } from '@shoutem/ui';
 import Camera from 'react-native-camera';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+rrR to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+const digitLookUpEndpoint = 'https://jsonplaceholder.typicode.com/posts/';
 
 export default class App extends Component<{}> {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      photo: 0,
+      result: 0
+    };
+  }
+
   render() {
     return (
       <Screen>
+        {this.state.photo ?
+          <Image 
+            style={{width: '75%', height: '75%'}} 
+            source={{uri: this.state.photo}}
+          />
+          : null}
+        {this.state.result ? 
+          <Text>{this.state.result}</Text> 
+          : null}
         <Camera style={{flex: 1}}
                 ref={cam => this.camera=cam}
                 aspect={Camera.constants.Aspect.fill}
+                captureTarget={Camera.constants.CaptureTarget.disk}
                 style={styles.preview}>
           <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
         </Camera>
@@ -35,12 +50,39 @@ export default class App extends Component<{}> {
     );
   }
 
+  classifyPicture(picture) {
+    const min = 1;
+    const max = 10;
+    const rand = Math.round(min + Math.random() * (max - min));
+
+    // Call out to our serverless endpoint which will return 
+    return fetch(digitLookUpEndpoint + rand)
+      .then((response) => {
+        return response.json();
+      })
+      .then((json) => {
+        return json;
+      })
+      .catch((err) => {
+        throw err;
+      });
+  }
+
   takePicture() {
     const options = {};
+    this.setState({photo: 0, result: 0});
+
     //options.location = ...
     this.camera.capture({metadata: options})
-      .then((data) => console.log(data))
-      .catch(err => console.error(err));
+      .then((data) => {
+        this.setState({photo: data.path});
+        return this.classifyPicture(data.path);
+      })
+      .then((data) => {
+        this.setState({result: data.id});
+        console.log(data);
+      })
+      .catch((err) => console.error(err));
   }
 }
 
