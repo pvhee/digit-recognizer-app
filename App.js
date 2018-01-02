@@ -15,7 +15,7 @@ import {
 import { Screen } from '@shoutem/ui';
 import Camera from 'react-native-camera';
 
-const digitLookUpEndpoint = 'https://jsonplaceholder.typicode.com/posts/';
+const digitLookUpEndpoint = 'https://t2umq4237b.execute-api.us-east-1.amazonaws.com/dev/classify';
 
 export default class App extends Component<{}> {
 
@@ -51,12 +51,8 @@ export default class App extends Component<{}> {
   }
 
   classifyPicture(picture) {
-    const min = 1;
-    const max = 10;
-    const rand = Math.round(min + Math.random() * (max - min));
-
     // Call out to our serverless endpoint which will return 
-    return fetch(digitLookUpEndpoint + rand)
+    return fetch(digitLookUpEndpoint)
       .then((response) => {
         return response.json();
       })
@@ -79,7 +75,7 @@ export default class App extends Component<{}> {
         return this.classifyPicture(data.path);
       })
       .then((data) => {
-        this.setState({result: data.id});
+        this.setState({result: data.class});
         console.log(data);
       })
       .catch((err) => console.error(err));
